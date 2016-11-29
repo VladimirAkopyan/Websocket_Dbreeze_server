@@ -6,6 +6,8 @@ using System.Net.WebSockets;
 using System.Threading;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
+using System.Text;
 
 namespace EdisonBrick
 {
@@ -33,8 +35,29 @@ namespace EdisonBrick
             while (this.socket.State == WebSocketState.Open)
             {
                 var incoming = await this.socket.ReceiveAsync(seg, CancellationToken.None);
-                var outgoing = new ArraySegment<byte>(buffer, 0, incoming.Count);
-                await this.socket.SendAsync(outgoing, WebSocketMessageType.Text, true, CancellationToken.None);
+
+                string responce = "Error";
+
+                var recieved = new ArraySegment<byte>(buffer, 0, incoming.Count);
+                {
+                   
+
+                    var message = JsonConvert.DeserializeObject<Messages.BaseMessage>(Encoding.UTF8.GetString(recieved.ToArray()));
+                    if(message != null)
+                    {
+                        switch(message.Type)
+                        {
+                            case Messages.BaseMessage.GetDataGroup:
+                                responce = JsonConvert.SerializeObject(DbAccess.DataGroupsList);
+                                break;
+                            case Messages.BaseMessage.GetAnnotations:
+                                responce = JsonConvert.SerializeObject(DbAccess.AnnotationsList);
+                                break;
+                        }
+                    }
+                }
+                ArraySegment<byte> responceData = new ArraySegment<byte>(Encoding.UTF8.GetBytes(responce)); 
+                await this.socket.SendAsync(responceData, WebSocketMessageType.Text, true, CancellationToken.None);
             }
         }
 

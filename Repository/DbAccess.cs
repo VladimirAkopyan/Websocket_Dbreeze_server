@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using DBreeze;
 using Newtonsoft.Json;
 using DBreeze.DataTypes;
+using System.Collections.Concurrent; 
 
 namespace EdisonBrick
 {
@@ -24,9 +25,9 @@ namespace EdisonBrick
 
         
 
-        private static SortedDictionary<DateTime, Repository.Annotation> AnnotationsSet = new SortedDictionary<DateTime, Repository.Annotation>();
-        private static SortedDictionary<string, Repository.Sensor> SensorsSet = new SortedDictionary<string, Repository.Sensor>();
-        private static SortedDictionary<Guid, Repository.DataGroup> DataGroupsSet = new SortedDictionary<Guid, Repository.DataGroup>(); 
+        private static SortedDictionary<DateTime, Repository.Annotation> _AnnotationsSet = new SortedDictionary<DateTime, Repository.Annotation>();
+        private static SortedDictionary<string, Repository.Sensor> _SensorsSet = new SortedDictionary<string, Repository.Sensor>();
+        private static SortedDictionary<Guid, Repository.DataGroup> _DataGroupsSet = new SortedDictionary<Guid, Repository.DataGroup>(); 
 
         /// <summary>
         /// LoadsAllData on intiation
@@ -42,11 +43,11 @@ namespace EdisonBrick
             {
                 foreach (var row in tran.SelectForward<Guid, DbCustomSerializer<Repository.DataGroup>>(TableType.DataGroup))
                 {
-                    DataGroupsSet.Add(row.Key, row.Value.Get);
+                    _DataGroupsSet.Add(row.Key, row.Value.Get);
                 }
                 foreach (var row in tran.SelectForward<DateTime, DbCustomSerializer<Repository.Annotation>>(TableType.Annotation))
                 {
-                    AnnotationsSet.Add(row.Key, row.Value.Get);
+                    _AnnotationsSet.Add(row.Key, row.Value.Get);
                 }
 
 
@@ -60,59 +61,72 @@ namespace EdisonBrick
 
         public static bool AddAnnotation(Repository.Annotation annotation)
         {
-            if (AnnotationsSet.ContainsKey(annotation.DateTimeUTC))
-                return false;
+            lock (_AnnotationsSet)
+            {
+                if (_AnnotationsSet.ContainsKey(annotation.DateTimeUTC))
+                    return false;
 
-            try
-            {
-                using (var tran = _dbEngine.GetTransaction())
+                try
                 {
-                    tran.Insert<DateTime, DbCustomSerializer<Repository.Annotation>>(TableType.Annotation, annotation.DateTimeUTC,annotation);
-                    tran.Commit(); 
+                    using (var tran = _dbEngine.GetTransaction())
+                    {
+                        tran.Insert<DateTime, DbCustomSerializer<Repository.Annotation>>(TableType.Annotation, annotation.DateTimeUTC, annotation);
+                        tran.Commit();
+                    }
+                    _AnnotationsSet.Add(annotation.DateTimeUTC, annotation);
+                    return true;
                 }
-                AnnotationsSet.Add(annotation.DateTimeUTC, annotation); 
-                return true; 
-            }
-            catch (Exception ex)
-            {
-                return false;
+                catch (Exception ex)
+                {
+                    return false;
+                }
             }
         }
 
         public static bool AddDataGroup(Repository.DataGroup datagroup)
         {
-            if (DataGroupsSet.ContainsKey(datagroup.Id))
-                return false;
-
-            try
+            lock (_DataGroupsSet)
             {
-                using (var tran = _dbEngine.GetTransaction())
+                if (_DataGroupsSet.ContainsKey(datagroup.Id))
+                    return false;
+
+                try
                 {
-                    tran.Insert<Guid, DbCustomSerializer<Repository.DataGroup>>(TableType.DataGroup, datagroup.Id, datagroup);
-                    tran.Commit();
+                    using (var tran = _dbEngine.GetTransaction())
+                    {
+                        tran.Insert<Guid, DbCustomSerializer<Repository.DataGroup>>(TableType.DataGroup, datagroup.Id, datagroup);
+                        tran.Commit();
+                    }
+                    _DataGroupsSet.Add(datagroup.Id, datagroup);
+                    return true;
                 }
-                DataGroupsSet.Add(datagroup.Id, datagroup);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                return false;
+                catch (Exception ex)
+                {
+                    return false;
+                }
             }
         }
 
-        public static Repository.DataGroup[] DataGroups
+        public static Repository.DataGroup[] DataGroupsList
         {
             get
             {
-                return DataGroupsSet.Select(item => item.Value).ToArray(); 
+                lock (_DataGroupsSet)
+                {
+                    return _DataGroupsSet.Select(item => item.Value).ToArray();
+                }
             }
         }
 
-        public static Repository.Annotation[] Annotations
+        public static Repository.Annotation[] AnnotationsList
         {
             get
             {
-                return AnnotationsSet.Select(item => item.Value).ToArray();
+                lock (_AnnotationsSet)
+                {
+                    return _AnnotationsSet.Select(item => item.Value).ToArray();
+                }
+                
             }
         }
 
