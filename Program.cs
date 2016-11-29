@@ -12,10 +12,9 @@ namespace EdisonBrick
     {
         public static void Main(string[] args)
         {
-            X509Certificate2 cert = new X509Certificate2("YourFileName.pfx",
-    "YOURPWD");
+
             var host = new WebHostBuilder()
-                .UseKestrel(cfg => cfg.UseHttps('www_quickbird_uk.crt',))
+                .UseKestrel()
                 .UseContentRoot(Directory.GetCurrentDirectory())
                 .UseIISIntegration()
                 .UseStartup<Startup>()
