@@ -12,6 +12,12 @@ namespace EdisonBrick
     {
         public static void Main(string[] args)
         {
+            Task task = Task.Run(
+                    () => 
+                        DbAccess.AddAnnotation(
+                            new Repository.Annotation(DateTime.UtcNow, "Test", "Test", string.Empty)
+                            )
+                ); 
 
             var host = new WebHostBuilder()
                 .UseKestrel()

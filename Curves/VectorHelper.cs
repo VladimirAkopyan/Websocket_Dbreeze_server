@@ -17,10 +17,11 @@
 // 3. This notice may not be removed or altered from any source distribution.
 
 using System.Runtime.CompilerServices;
+using System.Numerics;
+
 
 using VECTOR = System.Numerics.Vector2;
 using FLOAT = System.Single;
-
 
 namespace burningmime.curves
 {
@@ -35,37 +36,18 @@ namespace burningmime.curves
         /// </summary>
         public const FLOAT EPSILON = 1.2e-12f;
 
-#if SYSTEM_WINDOWS_VECTOR
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT Distance(VECTOR a, VECTOR b) { return (a - b).Length; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT DistanceSquared(VECTOR a, VECTOR b) { return (a - b).LengthSquared; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT Dot(VECTOR a, VECTOR b) { return a.X * b.X + a.Y * b.Y; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static VECTOR Normalize(VECTOR v) { v.Normalize(); return v; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT Length(VECTOR v) { return v.Length; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT LengthSquared(VECTOR v) { return v.LengthSquared; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static VECTOR Lerp(VECTOR a, VECTOR b, FLOAT amount) { return new VECTOR(a.X + ((b.X - a.X) * amount), a.Y + ((b.Y - a.Y) * amount)); }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT GetX(VECTOR v) { return v.X; }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT GetY(VECTOR v) { return v.Y; }
-#elif UNITY
-        public static FLOAT Distance(VECTOR a, VECTOR b) { return VECTOR.Distance(a, b); }
-        public static FLOAT DistanceSquared(VECTOR a, VECTOR b) { float dx = a.x - b.x; float dy = a.y - b.y; return dx*dx + dy*dy; }
-        public static FLOAT Dot(VECTOR a, VECTOR b) { return VECTOR.Dot(a, b); }
-        public static VECTOR Normalize(VECTOR v) { v.Normalize(); return v; }
-        public static FLOAT Length(VECTOR v) { return v.magnitude; }
-        public static FLOAT LengthSquared(VECTOR v) { return v.sqrMagnitude; }
-        public static VECTOR Lerp(VECTOR a, VECTOR b, FLOAT amount) { return VECTOR.Lerp(a, b, amount); }
-        public static FLOAT GetX(VECTOR v) { return v.x; }
-        public static FLOAT GetY(VECTOR v) { return v.y; }
-#else // SYSTEM_NUMERICS_VECTOR -- also works for SharpDX.Vector2 and Microsoft.Xna.Framework.Vector2 AFAICT
+        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT Distance(VECTOR a, VECTOR b) { return VECTOR.Distance(a, b); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT DistanceSquared(VECTOR a, VECTOR b) { return VECTOR.DistanceSquared(a, b); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT Dot(VECTOR a, VECTOR b) { return VECTOR.Dot(a, b); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static VECTOR Normalize(VECTOR v) { return VECTOR.Normalize(v); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT Length(VECTOR v) { return v.Length(); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT LengthSquared(VECTOR v) { return v.LengthSquared(); }
-        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static VECTOR Lerp(VECTOR a, VECTOR b, FLOAT amount) { return VECTOR.Lerp(a, b, amount); }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)] public static VECTOR Lerp(VECTOR a, VECTOR b, float amount) { return VECTOR.Lerp(a, b, amount); }
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT GetX(VECTOR v) { return v.X; }
         [MethodImpl(MethodImplOptions.AggressiveInlining)] public static FLOAT GetY(VECTOR v) { return v.Y; }
-#endif
+
 
         /// <summary>
         /// Checks if two vectors are equal within a small bounded error.
@@ -76,7 +58,7 @@ namespace burningmime.curves
         #if !UNITY
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         #endif
-        public static bool EqualsOrClose(VECTOR v1, VECTOR v2)
+        public static bool EqualsOrClose(Vector2 v1, Vector2 v2)
         {
             return DistanceSquared(v1, v2) < EPSILON;
         }
