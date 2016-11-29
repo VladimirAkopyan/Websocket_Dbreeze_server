@@ -14,7 +14,7 @@ namespace EdisonBrick
     public class SocketHandler
     {
         public const int BufferSize = 4096;
-        System.IO.Ports.SerialPort 
+
 
         WebSocket socket;
 
