@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using System.Text;
+using Newtonsoft.Json.Linq;
 
 namespace EdisonBrick
 {
@@ -25,9 +26,64 @@ namespace EdisonBrick
             this.socket = socket;
         }
 
+        private static bool IsValidJson(string strInput)
+        {
+            strInput = strInput.Trim();
+            if ((strInput.StartsWith("{") && strInput.EndsWith("}")) || //For object
+                (strInput.StartsWith("[") && strInput.EndsWith("]"))) //For array
+            {
+                try
+                {
+                    var obj = JToken.Parse(strInput);
+                    return true;
+                }
+                catch (JsonReaderException jex)
+                {
+                    //Exception in parsing json
+                    Console.WriteLine(jex.Message);
+                    return false;
+                }
+                catch (Exception ex) //some other exception
+                {
+                    Console.WriteLine(ex.ToString());
+                    return false;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        async void ParseAndRespond(ArraySegment<byte> recieved)
+        {
+            string responce = "Error";
+            string input = Encoding.UTF8.GetString(recieved.ToArray());
+            if(IsValidJson(input))
+            {   
+                var message = JsonConvert.DeserializeObject<Messages.BaseMessage>(input);
+                if (message != null)
+                {
+                    //main switch based on message type
+                    switch (message.Type)
+                    {
+                        case Messages.BaseMessage.GetDataGroup:
+                            responce = JsonConvert.SerializeObject(DbAccess.DataGroupsList);
+                            break;
+                        case Messages.BaseMessage.GetAnnotations:
+                            responce = JsonConvert.SerializeObject(DbAccess.AnnotationsList);
+                            break;
+                    }
+                }
+            }
+            //Send Responce
+            ArraySegment<byte> responceData = new ArraySegment<byte>(Encoding.UTF8.GetBytes(responce));
+            await this.socket.SendAsync(responceData, WebSocketMessageType.Text, true, CancellationToken.None);
+        }
 
 
-        async Task EchoLoop()
+
+        async Task RecieveLoop()
         {
             var buffer = new byte[BufferSize];
             var seg = new ArraySegment<byte>(buffer);
@@ -35,29 +91,8 @@ namespace EdisonBrick
             while (this.socket.State == WebSocketState.Open)
             {
                 var incoming = await this.socket.ReceiveAsync(seg, CancellationToken.None);
-
-                string responce = "Error";
-
                 var recieved = new ArraySegment<byte>(buffer, 0, incoming.Count);
-                {
-                   
-
-                    var message = JsonConvert.DeserializeObject<Messages.BaseMessage>(Encoding.UTF8.GetString(recieved.ToArray()));
-                    if(message != null)
-                    {
-                        switch(message.Type)
-                        {
-                            case Messages.BaseMessage.GetDataGroup:
-                                responce = JsonConvert.SerializeObject(DbAccess.DataGroupsList);
-                                break;
-                            case Messages.BaseMessage.GetAnnotations:
-                                responce = JsonConvert.SerializeObject(DbAccess.AnnotationsList);
-                                break;
-                        }
-                    }
-                }
-                ArraySegment<byte> responceData = new ArraySegment<byte>(Encoding.UTF8.GetBytes(responce)); 
-                await this.socket.SendAsync(responceData, WebSocketMessageType.Text, true, CancellationToken.None);
+                Task.Run(() => ParseAndRespond(recieved)); 
             }
         }
 
@@ -68,7 +103,7 @@ namespace EdisonBrick
 
             var socket = await hc.WebSockets.AcceptWebSocketAsync();
             var h = new SocketHandler(socket);
-            await h.EchoLoop();
+            await h.RecieveLoop();
         }
 
         public static void Map(IApplicationBuilder app)

@@ -37,6 +37,7 @@ namespace EdisonBrick
             DBreeze.Utils.CustomSerializator.Serializator = JsonConvert.SerializeObject;
             DBreeze.Utils.CustomSerializator.Deserializator = JsonConvert.DeserializeObject;
             _dbEngine = new DBreeze.DBreezeEngine(@"./DBreeze");
+            
 
             //LoadAllValues
             using (var tran = _dbEngine.GetTransaction())
