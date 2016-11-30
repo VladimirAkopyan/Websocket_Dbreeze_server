@@ -40,7 +40,7 @@ The server responds to messages, independantly and not nessesarily in order.
 ###Responce
 ~~~~
 {
-  "Type":"AddOrUpdateDatagroup",
+  "Type":"GetDataGroups",
   "Id":0,
   "DataGroups":[
       {"StartDateUTC":"2016-11-29T14:57:28.31141Z","Name":"Test", "Description":"Test"}
