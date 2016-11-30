@@ -62,18 +62,12 @@ namespace EdisonBrick
             if(IsValidJson(input))
             {   
                 var message = JsonConvert.DeserializeObject<Messages.BaseMessage>(input);
-                if (message != null)
+
+                Messages.BaseMessage.ProsessMessage processMessage;
+
+                if (Messages.BaseMessage.MessageActions.TryGetValue(message.Type, out processMessage))
                 {
-                    //main switch based on message type
-                    switch (message.Type)
-                    {
-                        case Messages.BaseMessage.GetDataGroup:
-                            responce = JsonConvert.SerializeObject(DbAccess.DataGroupsList);
-                            break;
-                        case Messages.BaseMessage.GetAnnotations:
-                            responce = JsonConvert.SerializeObject(DbAccess.AnnotationsList);
-                            break;
-                    }
+                    responce = processMessage(message); 
                 }
             }
             //Send Responce
