@@ -40,7 +40,8 @@
   "publishOptions": {
     "include": [
       "wwwroot",
-      "web.config"
+      "web.config",
+      "1.devices.quickbird.uk.pfx"
     ]
   },
 
