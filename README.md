@@ -49,6 +49,7 @@ The server responds to messages, independantly and not nessesarily in order.
 ~~~~
 
 ##AddOrUpdateDatagroup
+If the datagroup does not exist, it will create a new one. if it does exist, it will update / overwrite. 
 ###Request and reponce
 ~~~~
 {
@@ -59,3 +60,31 @@ The server responds to messages, independantly and not nessesarily in order.
       ]
 }
 ~~~~
+
+##AddOrUpdateAnnotations
+###Request and reponce
+~~~~
+{
+  "Type":"AddOrUpdateAnnotations",
+  "Id":0,
+  "Annotations":[
+      ...
+      ]
+}
+~~~~
+
+##DeleteAnnotations
+###Request
+Really only the time field is mandatory, but it needsto be exactly correct
+~~~
+{
+  "Type":"DeleteAnnotations",
+  "Id":2,
+  "Annotations":[
+      {"DateTimeUTC":"2016-11-29T14:53:47.1549874Z","Name":"Test","Type":"Test","Description":""}
+  ]
+}
+~~~
+
+##DeleteDatagroup
+Works same as above
