@@ -17,7 +17,7 @@ namespace EdisonBrick.Messages
         /// </summary>
         /// <param name="message">Message recieved through WebSocket</param>
         /// <returns>message to be sent back</returns>
-        public delegate string ProsessMessage(BaseMessage message);
+        public delegate string ProsessMessage(string message);
 
         /// <summary>
         /// This is a collection of messageTypes (as key) and functions that prossess them
@@ -32,28 +32,60 @@ namespace EdisonBrick.Messages
 
         static BaseMessage(){
             var messageActions = new Dictionary<string, ProsessMessage>{
-                ["GetAnnotations"] = (BaseMessage input) =>  
+                ["GetAnnotations"] = (string input) =>  
                     {
-                        var responce =  new AnnotationsDTO{
-                            Id = input.Id,
-                            Type = input.Type,
-                            Annotations = DbAccess.AnnotationsList
-                        };
-                        return JsonConvert.SerializeObject(responce); 
+                        var message = JsonConvert.DeserializeObject<Messages.AnnotationsDTO>(input); 
+                        message.Annotations = DbAccess.AnnotationsList;                        
+                        return JsonConvert.SerializeObject(message); 
                     },
-                ["GetDataGroups"] = (BaseMessage input) =>  
+                ["GetDataGroups"] = (string input) =>  
                     {
-                        var responce = new DataGroupsDTO{
-                            Id = input.Id,
-                            Type = input.Type,
-                            DataGroups = DbAccess.DataGroupsList
-                        };
-                        return JsonConvert.SerializeObject(responce);
-                    }
+                        var message = JsonConvert.DeserializeObject<Messages.DataGroupsDTO>(input);
+                        message.DataGroups = DbAccess.DataGroupsList;                         
+                        return JsonConvert.SerializeObject(message);
+                    },
+                ["AddOrUpdateDatagroup"] = (string input) =>  
+                    {
+                        var message = JsonConvert.DeserializeObject<Messages.DataGroupsDTO>(input);
+                        foreach(var dataGroup in message.DataGroups)
+                        {
+                            DbAccess.AddOrUpdateDatagroup(dataGroup);
+                        }
+                        return JsonConvert.SerializeObject(message);
+                    },
+                ["AddOrUpdateAnnotations"] = (string input) =>  
+                    {
+                        var message = JsonConvert.DeserializeObject<Messages.AnnotationsDTO>(input);
+                        foreach(var annotation in message.Annotations)
+                        {
+                            DbAccess.AddOrUpdateAnnotations(annotation);
+                        }
+                        return JsonConvert.SerializeObject(message);
+                    },
+                ["DeleteDatagroups"] = (string input) =>  
+                    {
+                        var message = JsonConvert.DeserializeObject<Messages.DataGroupsDTO>(input);
+                        foreach(var dataGroup in message.DataGroups)
+                        {
+                            DbAccess.DeleteDataGroup(dataGroup);
+                        }
+                        message.DataGroups = null;
+                        return JsonConvert.SerializeObject(message);
+                    },
+                ["DeleteAnnotations"] = (string input) =>  
+                    {
+                        var message = JsonConvert.DeserializeObject<Messages.AnnotationsDTO>(input);
+                        foreach(var annotation in message.Annotations)
+                        {
+                            DbAccess.DeleteAnnotation(annotation);
+                        }
+                        message.Annotations = null;
+                        return JsonConvert.SerializeObject(message);
+                    }                   
             };
             MessageActions = new ReadOnlyDictionary<string, ProsessMessage>(messageActions); 
         }
-        public  const string GetAnnotations = "GetAnnotations";
+
     }
 
     public class DataGroupsDTO : BaseMessage{

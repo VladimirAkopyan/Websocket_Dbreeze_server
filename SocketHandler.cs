@@ -67,7 +67,7 @@ namespace EdisonBrick
 
                 if (Messages.BaseMessage.MessageActions.TryGetValue(message.Type, out processMessage))
                 {
-                    responce = processMessage(message); 
+                    responce = processMessage(input); 
                 }
             }
             //Send Responce

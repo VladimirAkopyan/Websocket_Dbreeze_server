@@ -60,13 +60,10 @@ namespace EdisonBrick
             }
         }
 
-        public static bool AddAnnotation(Repository.Annotation annotation)
+        public static bool AddOrUpdateAnnotations(Repository.Annotation annotation)
         {
             lock (_AnnotationsSet)
             {
-                if (_AnnotationsSet.ContainsKey(annotation.DateTimeUTC))
-                    return false;
-
                 try
                 {
                     using (var tran = _dbEngine.GetTransaction())
@@ -74,23 +71,46 @@ namespace EdisonBrick
                         tran.Insert<DateTime, DbCustomSerializer<Repository.Annotation>>(TableType.Annotation, annotation.DateTimeUTC, annotation);
                         tran.Commit();
                     }
-                    _AnnotationsSet.Add(annotation.DateTimeUTC, annotation);
-                    return true;
+                     if (_AnnotationsSet.ContainsKey(annotation.DateTimeUTC))
+                        _AnnotationsSet[annotation.DateTimeUTC] = annotation;
+                    else
+                        _AnnotationsSet.Add(annotation.DateTimeUTC, annotation);                    
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
+                return true;
+            }
+        }
+
+        public static bool DeleteAnnotation(Repository.Annotation annotation)
+        {
+            lock (_AnnotationsSet)
+            {
+                if (_AnnotationsSet.ContainsKey(annotation.DateTimeUTC) == false)
+                    return false;
+                try
+                {
+                    using (var tran = _dbEngine.GetTransaction())
+                    {
+                        tran.RemoveKey(TableType.Annotation, annotation.DateTimeUTC); 
+                        tran.Commit();
+                    }
+                    _AnnotationsSet.Remove(annotation.DateTimeUTC);
                 }
                 catch (Exception ex)
                 {
                     return false;
                 }
             }
+            return true;
         }
 
-        public static bool AddDataGroup(Repository.DataGroup datagroup)
-        {
+        public static bool AddOrUpdateDatagroup(Repository.DataGroup datagroup)
+        {               
             lock (_DataGroupsSet)
             {
-                if (_DataGroupsSet.ContainsKey(datagroup.Id))
-                    return false;
-
                 try
                 {
                     using (var tran = _dbEngine.GetTransaction())
@@ -98,14 +118,40 @@ namespace EdisonBrick
                         tran.Insert<Guid, DbCustomSerializer<Repository.DataGroup>>(TableType.DataGroup, datagroup.Id, datagroup);
                         tran.Commit();
                     }
-                    _DataGroupsSet.Add(datagroup.Id, datagroup);
-                    return true;
+                    if (_DataGroupsSet.ContainsKey(datagroup.Id))
+                        _DataGroupsSet[datagroup.Id]= datagroup;
+                    else
+                     _DataGroupsSet.Add(datagroup.Id, datagroup);                     
+                }
+                catch (Exception ex)
+                {
+                    return false;
+                }
+                return true; 
+            }
+        }
+
+        public static bool DeleteDataGroup(Repository.DataGroup dataGroup)
+        {
+            lock (_DataGroupsSet)
+            {
+                if (_DataGroupsSet.ContainsKey(dataGroup.Id) == false)
+                    return false;
+                try
+                {
+                    using (var tran = _dbEngine.GetTransaction())
+                    {
+                        tran.RemoveKey(TableType.DataGroup, dataGroup.Id); 
+                        tran.Commit();
+                    }
+                    _DataGroupsSet.Remove(dataGroup.Id);
                 }
                 catch (Exception ex)
                 {
                     return false;
                 }
             }
+            return true;
         }
 
         public static Repository.DataGroup[] DataGroupsList
