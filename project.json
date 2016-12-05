@@ -21,8 +21,7 @@
   "frameworks": {
     "netcoreapp1.1": {
       "imports": [
-        "dotnet5.6",
-        "portable-net45+win8"
+        "netcoreapp1.1"
       ]
     }
   },
@@ -41,7 +40,8 @@
   "publishOptions": {
     "include": [
       "wwwroot",
-      "web.config"
+      "web.config",
+      "1.devices.quickbird.uk.pfx"
     ]
   },
 
