@@ -1,6 +1,7 @@
 # Websocket Dbreeze Server
 A toy asp.net core Websocket API with embedded DBreeze key-value database. This is purely a demo and not nessesarily "full and proper" way to do things, but it does work.
 The point is to demonstrate desining api's with web-socket, and to demonstrate embedded database Dbreeze. 
+[![Build Status](https://travis-ci.org/VladimirAkopyan/Websocket_Dbreeze_server.svg?branch=master)](https://travis-ci.org/VladimirAkopyan/Websocket_Dbreeze_server)
 
 # Start:
 Get the [SimpleWebsocketClient](https://chrome.google.com/webstore/detail/simple-websocket-client/pfdhoblngboilpfeibdedpjgfnlcodoo?hl=en) chrome extension.
