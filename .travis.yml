@@ -1,6 +1,6 @@
 language: csharp
 mono: none
-dotnet: 1.1.1
+dotnet: 1.1.0
 dist: Xenial
 script:
  - dotnet restore
